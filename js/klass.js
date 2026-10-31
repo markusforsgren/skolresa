@@ -73,9 +73,19 @@
       : `<div class="card-ph">${emojiFor(d.name)}</div>`;
   }
 
+  let tripFilter = "all";
+  function renderFilter() {
+    const box = $("trip-filter");
+    const hasDay = data.destinations.some(d => !d.overnight), hasNight = data.destinations.some(d => d.overnight);
+    if (!(hasDay && hasNight)) { box.innerHTML = ""; tripFilter = "all"; return; }
+    const opts = [["all", "Alla"], ["day", "☀️ Dagsturer"], ["night", "🌙 Med övernattning"]];
+    box.innerHTML = opts.map(([k, l]) => `<button type="button" class="tag${tripFilter === k ? " selected" : ""}" data-f="${k}">${l}</button>`).join("");
+    box.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { tripFilter = b.dataset.f; renderFilter(); renderDests(); });
+  }
+
   function renderDests() {
     const grid = $("dest-grid");
-    const list = data.destinations;
+    const list = data.destinations.filter(d => tripFilter === "all" || (tripFilter === "day" ? !d.overnight : d.overnight));
     $("no-dests").classList.toggle("hidden", list.length > 0 || data.class.allow_custom);
     grid.innerHTML = list.map(d => `
       <div class="dest-card${selected && selected.id === d.id ? " selected" : ""}" data-id="${esc(d.id)}" role="button" tabindex="0" aria-label="Välj ${esc(d.name)}">
@@ -86,7 +96,7 @@
           <div class="dest-card-sub">${esc(d.subtitle || d.location || "")}</div>
         </div>
         <div class="dest-card-footer">
-          ${d.overnight ? '<span class="night-badge">🌙 övernattning</span>' : "<span></span>"}
+          ${d.overnight ? '<span class="night-badge">🌙 övernattning</span>' : '<span class="night-badge day">☀️ dagstur</span>'}
           <button class="info-btn" type="button" data-info="${esc(d.id)}">Läs mer →</button>
         </div>
       </div>`).join("");
@@ -221,7 +231,7 @@
     $("modal-title").textContent = d.name;
     $("modal-location").textContent = d.location ? "📍 " + d.location : "";
     $("modal-desc").textContent = d.description || d.subtitle || "";
-    $("modal-tags").innerHTML = (d.tags || []).map(t => `<span class="pill">${esc(t)}</span>`).join("") + (d.overnight ? '<span class="night-badge">🌙 övernattning</span>' : "");
+    $("modal-tags").innerHTML = (d.tags || []).map(t => `<span class="pill">${esc(t)}</span>`).join("") + (d.overnight ? '<span class="night-badge">🌙 övernattning</span>' : '<span class="night-badge day">☀️ dagstur</span>');
     let links = "";
     const web = safeUrl(d.website_url);
     if (web) links += `<a class="chip-link" href="${esc(web)}" target="_blank" rel="noopener">🌐 Hemsida</a>`;
@@ -250,13 +260,13 @@
     const people = (c.student_count || 0) + (c.adult_count || 0);
     $("cost-intro").textContent = `Beräknat för ${people} deltagare (${c.student_count} elever${c.adult_count ? " + " + c.adult_count + " vuxna" : ""}). Alla belopp är uppskattningar.`;
     $("cost-raised").textContent = kr(raised());
-    $("fixed-pills").innerHTML = s.fixed_costs.filter(f => KM.num(f.amount) > 0)
-      .map(f => `<span class="pill">${esc(f.label)} ${kr(f.amount)}</span>`).join("") +
+    $("fixed-pills").innerHTML = s.fixed_costs.filter(f => KM.num(f.amount) > 0 || KM.fixedAmount(f, true) > 0)
+      .map(f => { const day = KM.fixedAmount(f, true); return `<span class="pill">${esc(f.label)} ${kr(f.amount)}${day !== KM.num(f.amount) ? ` <span style="opacity:.75">(dagstur ${kr(day)})</span>` : ""}</span>`; }).join("") +
       (KM.num(s.default_transport) ? `<span class="pill">🚌 Resa ${kr(s.default_transport)} totalt</span>` : "");
     $("cost-grid").innerHTML = data.destinations.map(d => {
       const r = calcDest(c, s, d);
       const row = (l, v) => KM.num(v) ? `<div class="cost-row"><span class="lbl">${l}</span><span>${kr(v)}</span></div>` : "";
-      return `<div class="cost-card"><div class="cost-head">${emojiFor(d.name)} ${esc(d.name)}</div><div class="cost-body">
+      return `<div class="cost-card"><div class="cost-head">${emojiFor(d.name)} ${esc(d.name)} <span style="font-family:Nunito,sans-serif;font-size:.75rem;opacity:.85">${d.overnight === false ? "☀️ dagstur" : "🌙 övernattning"}</span></div><div class="cost-body">
         ${row(d.includes_food ? "🎫 Paket/inträde" : "🎟️ Inträde", d.cost_entrance)}
         ${row("🎭 Övriga aktiviteter", d.cost_extra)}
         ${row("🛏️ Boende", d.cost_accommodation)}
@@ -289,7 +299,7 @@
 
   // ---------- Init ----------
   function renderAll() {
-    renderHeader(); renderBanner(); renderVoteState(); renderDests(); renderResults(); renderCosts(); renderFund();
+    renderHeader(); renderBanner(); renderVoteState(); renderFilter(); renderDests(); renderResults(); renderCosts(); renderFund();
   }
 
   async function refresh() {
@@ -301,7 +311,7 @@
       data = d;
       renderBanner(); renderResults(); renderCosts(); renderFund();
       if (openChanged) renderVoteState();
-      if (destsChanged) renderDests();
+      if (destsChanged) { renderFilter(); renderDests(); }
     } catch (e) { /* tyst – försöker igen nästa gång */ }
   }
 
