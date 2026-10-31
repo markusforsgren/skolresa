@@ -399,7 +399,7 @@ Hälsningar</textarea>
         <div id="dest-list">${list.length ? list.map((d, i) => `
           <div class="list-row">
             ${safeUrl(d.image_url) ? `<img class="thumb" src="${esc(safeUrl(d.image_url))}" alt="">` : `<div class="thumb">${emojiFor(d.name)}</div>`}
-            <div class="grow"><div class="ellipsis" style="font-weight:800">${esc(d.name)}</div><div class="small muted ellipsis">${esc(d.subtitle || d.location || "")}</div></div>
+            <div class="grow"><div class="ellipsis" style="font-weight:800">${esc(d.name)}</div><div class="small muted ellipsis">${d.overnight ? "🌙" : "☀️ Dagstur ·"} ${esc(d.subtitle || d.location || "")}</div></div>
             <button class="icon-btn" data-up="${i}" title="Flytta upp" ${i === 0 ? "disabled style='opacity:.25'" : ""}>⬆️</button>
             <button class="icon-btn" data-down="${i}" title="Flytta ner" ${i === list.length - 1 ? "disabled style='opacity:.25'" : ""}>⬇️</button>
             <button class="btn light sm" data-edit="${esc(d.id)}">Ändra</button>
@@ -531,7 +531,7 @@ Hälsningar</textarea>
     $("tpl-grid").innerHTML = TPL.destinations.map(t => {
       const ex = existing.has(t.name.toLowerCase());
       return `<button type="button" class="tpl${ex ? " exists" : ""}" data-key="${t.key}" ${ex ? "disabled" : ""}>
-        <img src="${esc(t.image_url)}" alt="" loading="lazy"><div class="p">${esc(t.name)}<small>${ex ? "Redan tillagd" : esc(t.location)}</small></div></button>`;
+        ${t.image_url ? `<img src="${esc(t.image_url)}" alt="" loading="lazy">` : `<div class="card-ph" style="height:90px;font-size:2rem">${emojiFor(t.name)}</div>`}<div class="p">${esc(t.name)}<small>${ex ? "Redan tillagd" : (t.overnight === false ? "☀️ Dagstur · " : "🌙 ") + esc(t.location)}</small></div></button>`;
     }).join("");
     $("tpl-grid").querySelectorAll(".tpl:not(.exists)").forEach(b => b.onclick = () => {
       const k = b.dataset.key;
@@ -547,7 +547,7 @@ Hälsningar</textarea>
     let order = nextOrder();
     const rows = TPL.destinations.filter(t => tplOn.has(t.key)).map(t => ({
       class_id: S.cls.id, name: t.name, location: t.location, subtitle: t.subtitle, description: t.description,
-      image_url: t.image_url, video_url: t.video_url || null, website_url: t.website_url, tags: t.tags, overnight: true,
+      image_url: t.image_url, video_url: t.video_url || null, website_url: t.website_url, tags: t.tags, overnight: t.overnight !== false,
       cost_entrance: t.cost_entrance || 0, cost_extra: t.cost_extra || 0, cost_accommodation: t.cost_accommodation || 0,
       includes_food: !!t.includes_food, sort_order: order++
     }));
@@ -625,7 +625,7 @@ Hälsningar</textarea>
     // Arbetskopior som sparas med knappen
     const work = {
       settings: JSON.parse(JSON.stringify(st)),
-      dests: S.dests.map(d => ({ id: d.id, name: d.name, cost_entrance: d.cost_entrance, cost_extra: d.cost_extra, cost_accommodation: d.cost_accommodation, cost_transport: d.cost_transport, includes_food: d.includes_food }))
+      dests: S.dests.map(d => ({ id: d.id, name: d.name, cost_entrance: d.cost_entrance, cost_extra: d.cost_extra, cost_accommodation: d.cost_accommodation, cost_transport: d.cost_transport, includes_food: d.includes_food, overnight: d.overnight }))
     };
     const people = c.student_count + c.adult_count;
     el.innerHTML = `
@@ -635,7 +635,8 @@ Hälsningar</textarea>
       </div>
       <div class="card">
         <h2 class="section-label">🍽️ Kostnader som är lika för alla resmål</h2>
-        <p class="small muted" style="margin-bottom:.9rem">Per person för hela resan. Markera "mat" på det som räknas bort när ett resmål har mat i paketet.</p>
+        <p class="small muted" style="margin-bottom:.9rem">Per person. Fyll i vad det kostar på en resa <strong>med övernattning</strong> och på en <strong>dagstur</strong>. Markera "mat" på det som räknas bort när ett resmål har mat i paketet.</p>
+        <div class="fixed-row fixed-head"><span>Vad</span><span>Övernattning</span><span>Dagstur</span><span></span><span></span></div>
         <div id="fixed-list"></div>
         <button class="btn light sm" id="add-fixed">➕ Lägg till kostnad</button>
         <div class="grid2" style="margin-top:1.25rem">
@@ -652,19 +653,26 @@ Hälsningar</textarea>
         <button class="btn" id="save-costs">💾 Spara kostnader<span class="dirty-dot hidden" id="dirty-ind"></span></button>
       </div>`;
 
+    function updateFixedSum() {
+      const fc = work.settings.fixed_costs;
+      $("fixed-sum").textContent = "Summa per person: " + kr(fc.reduce((a, x) => a + KM.fixedAmount(x, false), 0)) + " med övernattning · " + kr(fc.reduce((a, x) => a + KM.fixedAmount(x, true), 0)) + " dagstur";
+    }
+
     function renderFixed() {
       $("fixed-list").innerHTML = work.settings.fixed_costs.map((f, i) => `
         <div class="fixed-row">
           <input class="input" data-fi="${i}" data-k="label" value="${esc(f.label)}" maxlength="40" placeholder="T.ex. Lunch">
-          <input class="input num" type="number" min="0" data-fi="${i}" data-k="amount" value="${num(f.amount)}" aria-label="Belopp per person">
+          <label><span class="mob">Övernattning</span><input class="input num" type="number" min="0" data-fi="${i}" data-k="amount" value="${num(f.amount)}" aria-label="Kr per person, övernattning"></label>
+          <label><span class="mob">Dagstur</span><input class="input num" type="number" min="0" data-fi="${i}" data-k="day_amount" value="${KM.fixedAmount(f, true)}" aria-label="Kr per person, dagstur"></label>
           <label class="check food" style="margin:0;font-size:.85rem"><input type="checkbox" data-fi="${i}" data-k="food" ${f.food ? "checked" : ""}> mat</label>
           <button class="icon-btn" data-fdel="${i}" title="Ta bort">✕</button>
-        </div>`).join("") + `<div class="small" style="text-align:right;font-weight:800;margin:.25rem 0 .75rem">Summa: ${kr(work.settings.fixed_costs.reduce((a, f) => a + num(f.amount), 0))} / person</div>`;
+        </div>`).join("") + `<div class="small" id="fixed-sum" style="text-align:right;font-weight:800;margin:.25rem 0 .75rem"></div>`;
+      updateFixedSum();
       $("fixed-list").querySelectorAll("[data-fi]").forEach(inp => inp.addEventListener(inp.type === "checkbox" ? "change" : "input", () => {
         const f = work.settings.fixed_costs[+inp.dataset.fi];
-        f[inp.dataset.k] = inp.type === "checkbox" ? inp.checked : inp.dataset.k === "amount" ? num(inp.value) : inp.value;
-        markDirty(); renderCards();
-        if (inp.dataset.k === "amount") $("fixed-list").querySelector("div.small").textContent = "Summa: " + kr(work.settings.fixed_costs.reduce((a, x) => a + num(x.amount), 0)) + " / person";
+        const k = inp.dataset.k;
+        f[k] = inp.type === "checkbox" ? inp.checked : (k === "amount" || k === "day_amount") ? num(inp.value) : inp.value;
+        markDirty(); renderCards(); updateFixedSum();
       }));
       $("fixed-list").querySelectorAll("[data-fdel]").forEach(b => b.onclick = () => { work.settings.fixed_costs.splice(+b.dataset.fdel, 1); markDirty(); renderFixed(); renderCards(); });
     }
@@ -679,7 +687,7 @@ Hälsningar</textarea>
       const grid = $("cost-grid");
       if (!grid.children.length) {
         grid.innerHTML = work.dests.map((d, i) => `
-          <div class="cost-card"><div class="cost-head">${emojiFor(d.name)} ${esc(d.name)}</div><div class="cost-body">
+          <div class="cost-card"><div class="cost-head">${emojiFor(d.name)} ${esc(d.name)} <span style="font-family:Nunito,sans-serif;font-size:.75rem;opacity:.85">${d.overnight === false ? "☀️ dagstur" : "🌙 övernattning"}</span></div><div class="cost-body">
             <div class="cost-row"><span class="lbl">🎟️ Inträde/paket per pers</span><input class="input" type="number" min="0" data-di="${i}" data-k="cost_entrance" value="${num(d.cost_entrance)}"></div>
             <div class="cost-row"><span class="lbl">🎭 Övrigt per pers</span><input class="input" type="number" min="0" data-di="${i}" data-k="cost_extra" value="${num(d.cost_extra)}"></div>
             <div class="cost-row"><span class="lbl">🛏️ Boende per pers</span><input class="input" type="number" min="0" data-di="${i}" data-k="cost_accommodation" value="${num(d.cost_accommodation)}"></div>
@@ -699,7 +707,7 @@ Hälsningar</textarea>
       grid.querySelectorAll('[data-k="cost_transport"]').forEach(inp => inp.placeholder = num(work.settings.default_transport));
     }
 
-    $("add-fixed").onclick = () => { work.settings.fixed_costs.push({ label: "", amount: 0, food: false }); markDirty(); renderFixed(); };
+    $("add-fixed").onclick = () => { work.settings.fixed_costs.push({ label: "", amount: 0, day_amount: 0, food: false }); markDirty(); renderFixed(); };
     $("def-transport").oninput = e => { work.settings.default_transport = num(e.target.value); markDirty(); renderCards(); };
     $("goal-dest").onchange = e => { work.settings.goal_destination_id = e.target.value || null; markDirty(); };
     renderFixed(); renderCards();
@@ -709,7 +717,7 @@ Hälsningar</textarea>
       stEl.className = "status"; stEl.textContent = "Sparar…";
       $("save-costs").disabled = true;
       try {
-        work.settings.fixed_costs = work.settings.fixed_costs.filter(f => f.label.trim() || num(f.amount));
+        work.settings.fixed_costs = work.settings.fixed_costs.filter(f => f.label.trim() || num(f.amount) || num(f.day_amount));
         await updateClass({ settings: work.settings });
         const res = await Promise.all(work.dests.map(w => sb.from("km_destinations").update({
           cost_entrance: num(w.cost_entrance), cost_extra: num(w.cost_extra), cost_accommodation: num(w.cost_accommodation),
