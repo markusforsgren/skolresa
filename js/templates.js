@@ -1,7 +1,21 @@
 // Färdiga förslag som vuxna kan lägga till med ett klick.
-// Priser är ungefärliga startvärden – den vuxna justerar i Kostnader.
+// Priser är ungefärliga startvärden (barnpris, okt 2026) – den vuxna justerar i Kostnader.
 window.KM_TEMPLATES = {
   destinations: [
+    // ---------- Dagsturer (ingen övernattning) ----------
+    { key: "leksand-dag", name: "Leksand Sommarland", location: "Leksand", subtitle: "Vattenpark & nöjespark – dagstur", overnight: false,
+      tags: ["Vattenpark", "Åkattraktioner", "Dagstur"], website_url: "https://leksandsommarland.se",
+      description: "Dalarnas stora sommarland med vattenrutschkanor, bassänger och åkattraktioner. Har ett skolresepaket där entré och lunch ingår. Perfekt dagstur – hemma igen samma kväll!",
+      cost_entrance: 495, cost_extra: 0, cost_accommodation: 0, includes_food: true },
+    { key: "furuvik-dag", name: "Furuviksparken", location: "Gävle", subtitle: "Djurpark + nöjespark – dagstur", image_url: "/img/mallar/furuvik.jpg", overnight: false,
+      tags: ["Djurpark", "Åkattraktioner", "Dagstur"], website_url: "https://www.furuvik.se",
+      description: "Djurpark och nöjespark i ett – möt apor och massor av djur på nära håll och åk karuseller. En heldag med hemresa samma kväll.",
+      cost_entrance: 469, cost_extra: 0, cost_accommodation: 0 },
+    { key: "gronalund-dag", name: "Gröna Lund", location: "Stockholm", subtitle: "Tivoli på Djurgården – dagstur", image_url: "/img/mallar/gronalund.jpg", overnight: false,
+      tags: ["Tivoli", "Åkattraktioner", "Dagstur"], website_url: "https://www.gronalund.com",
+      description: "Stockholms klassiska tivoli med berg- och dalbanor, fritt fall och karuseller för alla nivåer. Lång dag men hemma samma kväll.",
+      cost_entrance: 545, cost_extra: 0, cost_accommodation: 0 },
+    // ---------- Med övernattning ----------
     { key: "skara", name: "Skara Sommarland", location: "Skara", subtitle: "Vattenpark & nöjespark", image_url: "/img/mallar/skara.jpg",
       tags: ["Vattenrutschkanor", "Nöjespark"], website_url: "https://www.skarasommarland.se",
       description: "Skandinaviens största vattenpark. Plaska i lagunen, åk vattenrutschkanor och testa tivolits fartfyllda attraktioner. En hel dag av skratt och äventyr för hela klassen!",
