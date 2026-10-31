@@ -7,10 +7,10 @@
 
   const DEFAULT_SETTINGS = {
     fixed_costs: [
-      { label: "Frukost", amount: 200, food: true },
-      { label: "Lunch", amount: 300, food: true },
-      { label: "Middag", amount: 500, food: true },
-      { label: "Fickpengar", amount: 400, food: false }
+      { label: "Frukost", amount: 200, day_amount: 0, food: true },
+      { label: "Lunch", amount: 300, day_amount: 150, food: true },
+      { label: "Middag", amount: 500, day_amount: 0, food: true },
+      { label: "Fickpengar", amount: 400, day_amount: 200, food: false }
     ],
     default_transport: 10000,
     goal_destination_id: null
@@ -60,13 +60,20 @@
     return s;
   }
 
+  // Fast kostnad: "amount" gäller resor med övernattning, "day_amount" dagsturer
+  function fixedAmount(f, dayTrip) {
+    if (!dayTrip) return num(f.amount);
+    return f.day_amount == null || f.day_amount === "" ? num(f.amount) : num(f.day_amount);
+  }
+
   // Räkna ut kostnad för ett resmål
   function calcDest(cls, settings, d) {
     const s = settingsOf(settings);
     const people = Math.max(1, (Number(cls.student_count) || 0) + (Number(cls.adult_count) || 0));
+    const dayTrip = d.overnight === false;
     const fixed = s.fixed_costs
       .filter(f => !(d.includes_food && f.food))
-      .reduce((a, f) => a + num(f.amount), 0);
+      .reduce((a, f) => a + fixedAmount(f, dayTrip), 0);
     const transport = d.cost_transport == null || d.cost_transport === "" ? num(s.default_transport) : num(d.cost_transport);
     const perPerson = num(d.cost_entrance) + num(d.cost_extra) + num(d.cost_accommodation) + fixed + transport / people;
     return { people, fixed, transport, perPerson, total: perPerson * people };
@@ -95,7 +102,7 @@
 
   function emojiFor(name) {
     const n = (name || "").toLowerCase();
-    const map = [["vatten", "💦"], ["bad", "🌊"], ["djur", "🦁"], ["zoo", "🦊"], ["liseberg", "🎡"], ["tivoli", "🎠"], ["lund", "🎠"],
+    const map = [["vatten", "💦"], ["sommarland", "💦"], ["bad", "🌊"], ["djur", "🦁"], ["zoo", "🦊"], ["liseberg", "🎡"], ["tivoli", "🎠"], ["lund", "🎠"],
       ["boda", "🧩"], ["chaparral", "🤠"], ["challenge", "🏆"], ["bowling", "🎳"], ["museum", "🏛️"], ["strand", "🏖️"], ["hav", "⛵"],
       ["fjäll", "🏔️"], ["skid", "⛷️"], ["stockholm", "👑"], ["göteborg", "🎡"], ["trampolin", "🤸"], ["laser", "🔫"], ["go", "🏎️"]];
     for (const [k, e] of map) if (n.includes(k)) return e;
@@ -116,5 +123,5 @@
   function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function storageSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
 
-  window.KM = { sb, cfg, DEFAULT_SETTINGS, esc, safeUrl, videoEmbed, kr, num, settingsOf, calcDest, fundBar, toast, emojiFor, codeFromUrl, classLink, storageGet, storageSet };
+  window.KM = { sb, cfg, DEFAULT_SETTINGS, fixedAmount, esc, safeUrl, videoEmbed, kr, num, settingsOf, calcDest, fundBar, toast, emojiFor, codeFromUrl, classLink, storageGet, storageSet };
 })();
