@@ -152,7 +152,10 @@
         <label class="field"><span>Video (YouTube-länk)</span><input class="input" name="video_url" maxlength="500" placeholder="https://www.youtube.com/watch?v=…"></label>
       </div>
       <label class="field"><span>Taggar (separera med komma)</span><input class="input" name="tags" maxlength="300" placeholder="Djur, Åkattraktioner"></label>
-      <label class="check"><input type="checkbox" name="overnight"> Övernattning<small>Bocka ur för dagstur – då räknas kostnaderna för en dag</small></label>
+      <label class="check"><input type="checkbox" name="overnight"> Övernattning<small>Bocka ur för dagstur – då räknas kostnaderna per dag</small></label>
+      <label class="field hidden" id="days-wrap" style="max-width:320px"><span>Antal dagsturer i det här alternativet</span>
+        <select class="input" name="days"><option value="1">1 dag</option><option value="2">2 dagar (t.ex. två olika parker)</option><option value="3">3 dagar</option><option value="4">4 dagar</option></select>
+      </label>
 
       <details style="margin:.5rem 0 1rem">
         <summary style="cursor:pointer;font-weight:800;color:var(--purple)">💰 Kostnader (kan också fyllas i under Kostnader)</summary>
