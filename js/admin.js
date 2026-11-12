@@ -399,7 +399,7 @@ Hälsningar</textarea>
         <div id="dest-list">${list.length ? list.map((d, i) => `
           <div class="list-row">
             ${safeUrl(d.image_url) ? `<img class="thumb" src="${esc(safeUrl(d.image_url))}" alt="">` : `<div class="thumb">${emojiFor(d.name)}</div>`}
-            <div class="grow"><div class="ellipsis" style="font-weight:800">${esc(d.name)}</div><div class="small muted ellipsis">${d.overnight ? "🌙" : "☀️ Dagstur ·"} ${esc(d.subtitle || d.location || "")}</div></div>
+            <div class="grow"><div class="ellipsis" style="font-weight:800">${esc(d.name)}</div><div class="small muted ellipsis">${KM.tripLabel(d)} · ${esc(d.subtitle || d.location || "")}</div></div>
             <button class="icon-btn" data-up="${i}" title="Flytta upp" ${i === 0 ? "disabled style='opacity:.25'" : ""}>⬆️</button>
             <button class="icon-btn" data-down="${i}" title="Flytta ner" ${i === list.length - 1 ? "disabled style='opacity:.25'" : ""}>⬇️</button>
             <button class="btn light sm" data-edit="${esc(d.id)}">Ändra</button>
@@ -448,6 +448,8 @@ Hälsningar</textarea>
     ["name", "location", "subtitle", "description", "image_url", "video_url", "website_url"].forEach(k => f[k].value = v[k] || "");
     f.tags.value = (v.tags || []).join(", ");
     f.overnight.checked = !!v.overnight;
+    f.days.value = v.days || 1;
+    syncDaysField();
     ["cost_entrance", "cost_extra", "cost_accommodation"].forEach(k => f[k].value = v[k] ? Number(v[k]) : "");
     f.cost_transport.value = v.cost_transport == null ? "" : Number(v.cost_transport);
     f.includes_food.checked = !!v.includes_food;
@@ -455,6 +457,8 @@ Hälsningar</textarea>
     openModal("m-dest");
   }
   $("dest-form").image_url.addEventListener("input", e => setPreview(e.target.value));
+  function syncDaysField() { $("days-wrap").classList.toggle("hidden", $("dest-form").overnight.checked); }
+  $("dest-form").overnight.addEventListener("change", syncDaysField);
   $("dest-img-clear").onclick = () => { $("dest-form").image_url.value = ""; setPreview(""); };
 
   async function resizeImage(file, max) {
@@ -507,6 +511,7 @@ Hälsningar</textarea>
       video_url: f.video_url.value.trim() || null, website_url: f.website_url.value.trim() || null,
       tags: f.tags.value.split(",").map(t => t.trim()).filter(Boolean).slice(0, 8),
       overnight: f.overnight.checked,
+      days: f.overnight.checked ? 1 : Math.min(10, Math.max(1, parseInt(f.days.value) || 1)),
       cost_entrance: num(f.cost_entrance.value), cost_extra: num(f.cost_extra.value), cost_accommodation: num(f.cost_accommodation.value),
       cost_transport: f.cost_transport.value === "" ? null : num(f.cost_transport.value),
       includes_food: f.includes_food.checked
@@ -531,7 +536,7 @@ Hälsningar</textarea>
     $("tpl-grid").innerHTML = TPL.destinations.map(t => {
       const ex = existing.has(t.name.toLowerCase());
       return `<button type="button" class="tpl${ex ? " exists" : ""}" data-key="${t.key}" ${ex ? "disabled" : ""}>
-        ${t.image_url ? `<img src="${esc(t.image_url)}" alt="" loading="lazy">` : `<div class="card-ph" style="height:90px;font-size:2rem">${emojiFor(t.name)}</div>`}<div class="p">${esc(t.name)}<small>${ex ? "Redan tillagd" : (t.overnight === false ? "☀️ Dagstur · " : "🌙 ") + esc(t.location)}</small></div></button>`;
+        ${t.image_url ? `<img src="${esc(t.image_url)}" alt="" loading="lazy">` : `<div class="card-ph" style="height:90px;font-size:2rem">${emojiFor(t.name)}</div>`}<div class="p">${esc(t.name)}<small>${ex ? "Redan tillagd" : KM.tripLabel(t) + " · " + esc(t.location)}</small></div></button>`;
     }).join("");
     $("tpl-grid").querySelectorAll(".tpl:not(.exists)").forEach(b => b.onclick = () => {
       const k = b.dataset.key;
@@ -547,7 +552,7 @@ Hälsningar</textarea>
     let order = nextOrder();
     const rows = TPL.destinations.filter(t => tplOn.has(t.key)).map(t => ({
       class_id: S.cls.id, name: t.name, location: t.location, subtitle: t.subtitle, description: t.description,
-      image_url: t.image_url, video_url: t.video_url || null, website_url: t.website_url, tags: t.tags, overnight: t.overnight !== false,
+      image_url: t.image_url, video_url: t.video_url || null, website_url: t.website_url, tags: t.tags, overnight: t.overnight !== false, days: t.days || 1,
       cost_entrance: t.cost_entrance || 0, cost_extra: t.cost_extra || 0, cost_accommodation: t.cost_accommodation || 0,
       includes_food: !!t.includes_food, sort_order: order++
     }));
@@ -625,7 +630,7 @@ Hälsningar</textarea>
     // Arbetskopior som sparas med knappen
     const work = {
       settings: JSON.parse(JSON.stringify(st)),
-      dests: S.dests.map(d => ({ id: d.id, name: d.name, cost_entrance: d.cost_entrance, cost_extra: d.cost_extra, cost_accommodation: d.cost_accommodation, cost_transport: d.cost_transport, includes_food: d.includes_food, overnight: d.overnight }))
+      dests: S.dests.map(d => ({ id: d.id, name: d.name, cost_entrance: d.cost_entrance, cost_extra: d.cost_extra, cost_accommodation: d.cost_accommodation, cost_transport: d.cost_transport, includes_food: d.includes_food, overnight: d.overnight, days: d.days }))
     };
     const people = c.student_count + c.adult_count;
     el.innerHTML = `
@@ -687,7 +692,7 @@ Hälsningar</textarea>
       const grid = $("cost-grid");
       if (!grid.children.length) {
         grid.innerHTML = work.dests.map((d, i) => `
-          <div class="cost-card"><div class="cost-head">${emojiFor(d.name)} ${esc(d.name)} <span style="font-family:Nunito,sans-serif;font-size:.75rem;opacity:.85">${d.overnight === false ? "☀️ dagstur" : "🌙 övernattning"}</span></div><div class="cost-body">
+          <div class="cost-card"><div class="cost-head">${emojiFor(d.name)} ${esc(d.name)} <span style="font-family:Nunito,sans-serif;font-size:.75rem;opacity:.85">${KM.tripLabel(d)}</span></div><div class="cost-body">
             <div class="cost-row"><span class="lbl">🎟️ Inträde/paket per pers</span><input class="input" type="number" min="0" data-di="${i}" data-k="cost_entrance" value="${num(d.cost_entrance)}"></div>
             <div class="cost-row"><span class="lbl">🎭 Övrigt per pers</span><input class="input" type="number" min="0" data-di="${i}" data-k="cost_extra" value="${num(d.cost_extra)}"></div>
             <div class="cost-row"><span class="lbl">🛏️ Boende per pers</span><input class="input" type="number" min="0" data-di="${i}" data-k="cost_accommodation" value="${num(d.cost_accommodation)}"></div>

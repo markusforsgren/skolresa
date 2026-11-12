@@ -96,7 +96,7 @@
           <div class="dest-card-sub">${esc(d.subtitle || d.location || "")}</div>
         </div>
         <div class="dest-card-footer">
-          ${d.overnight ? '<span class="night-badge">🌙 övernattning</span>' : '<span class="night-badge day">☀️ dagstur</span>'}
+          ${KM.tripBadge(d)}
           <button class="info-btn" type="button" data-info="${esc(d.id)}">Läs mer →</button>
         </div>
       </div>`).join("");
@@ -231,7 +231,7 @@
     $("modal-title").textContent = d.name;
     $("modal-location").textContent = d.location ? "📍 " + d.location : "";
     $("modal-desc").textContent = d.description || d.subtitle || "";
-    $("modal-tags").innerHTML = (d.tags || []).map(t => `<span class="pill">${esc(t)}</span>`).join("") + (d.overnight ? '<span class="night-badge">🌙 övernattning</span>' : '<span class="night-badge day">☀️ dagstur</span>');
+    $("modal-tags").innerHTML = (d.tags || []).map(t => `<span class="pill">${esc(t)}</span>`).join("") + KM.tripBadge(d);
     let links = "";
     const web = safeUrl(d.website_url);
     if (web) links += `<a class="chip-link" href="${esc(web)}" target="_blank" rel="noopener">🌐 Hemsida</a>`;
@@ -266,12 +266,12 @@
     $("cost-grid").innerHTML = data.destinations.map(d => {
       const r = calcDest(c, s, d);
       const row = (l, v) => KM.num(v) ? `<div class="cost-row"><span class="lbl">${l}</span><span>${kr(v)}</span></div>` : "";
-      return `<div class="cost-card"><div class="cost-head">${emojiFor(d.name)} ${esc(d.name)} <span style="font-family:Nunito,sans-serif;font-size:.75rem;opacity:.85">${d.overnight === false ? "☀️ dagstur" : "🌙 övernattning"}</span></div><div class="cost-body">
+      return `<div class="cost-card"><div class="cost-head">${emojiFor(d.name)} ${esc(d.name)} <span style="font-family:Nunito,sans-serif;font-size:.75rem;opacity:.85">${KM.tripLabel(d)}</span></div><div class="cost-body">
         ${row(d.includes_food ? "🎫 Paket/inträde" : "🎟️ Inträde", d.cost_entrance)}
         ${row("🎭 Övriga aktiviteter", d.cost_extra)}
         ${row("🛏️ Boende", d.cost_accommodation)}
         ${row(d.includes_food ? "🍽️ Övrigt (mat ingår)" : "🍽️ Mat & fickpengar", r.fixed)}
-        ${row("🚌 Resa per person", r.transport / r.people)}
+        ${row(d.overnight === false && (d.days || 1) > 1 ? "🚌 Resor per person (" + d.days + " st)" : "🚌 Resa per person", r.transport / r.people)}
         <div class="cost-total"><span style="font-weight:800">Per person</span><span class="v">${kr(r.perPerson)}</span></div>
         <div class="small muted" style="text-align:right">Hela klassen: ${kr(r.total)}</div>
         ${fundBar(raised(), r.total)}

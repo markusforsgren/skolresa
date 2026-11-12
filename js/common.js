@@ -45,6 +45,16 @@
     return "";
   }
 
+  // Märkning: "🌙 övernattning", "☀️ dagstur" eller "☀️ 2 dagsturer"
+  function tripLabel(d) {
+    if (d.overnight !== false) return "🌙 övernattning";
+    const n = Math.max(1, parseInt(d.days) || 1);
+    return n > 1 ? "☀️ " + n + " dagsturer" : "☀️ dagstur";
+  }
+  function tripBadge(d) {
+    return `<span class="night-badge${d.overnight === false ? " day" : ""}">${tripLabel(d)}</span>`;
+  }
+
   function kr(n) {
     return Math.round(Number(n) || 0).toLocaleString("sv-SE") + " kr";
   }
@@ -73,8 +83,9 @@
     const dayTrip = d.overnight === false;
     const fixed = s.fixed_costs
       .filter(f => !(d.includes_food && f.food))
-      .reduce((a, f) => a + fixedAmount(f, dayTrip), 0);
-    const transport = d.cost_transport == null || d.cost_transport === "" ? num(s.default_transport) : num(d.cost_transport);
+      .reduce((a, f) => a + fixedAmount(f, dayTrip), 0) * (dayTrip ? Math.max(1, parseInt(d.days) || 1) : 1);
+    const days = dayTrip ? Math.max(1, parseInt(d.days) || 1) : 1;   // flera dagsturer i samma alternativ
+    const transport = d.cost_transport == null || d.cost_transport === "" ? num(s.default_transport) * days : num(d.cost_transport);
     const perPerson = num(d.cost_entrance) + num(d.cost_extra) + num(d.cost_accommodation) + fixed + transport / people;
     return { people, fixed, transport, perPerson, total: perPerson * people };
   }
@@ -123,5 +134,5 @@
   function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function storageSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
 
-  window.KM = { sb, cfg, DEFAULT_SETTINGS, fixedAmount, esc, safeUrl, videoEmbed, kr, num, settingsOf, calcDest, fundBar, toast, emojiFor, codeFromUrl, classLink, storageGet, storageSet };
+  window.KM = { sb, cfg, DEFAULT_SETTINGS, fixedAmount, tripLabel, tripBadge, esc, safeUrl, videoEmbed, kr, num, settingsOf, calcDest, fundBar, toast, emojiFor, codeFromUrl, classLink, storageGet, storageSet };
 })();

@@ -15,6 +15,10 @@ window.KM_TEMPLATES = {
       tags: ["Tivoli", "Åkattraktioner", "Dagstur"], website_url: "https://www.gronalund.com",
       description: "Stockholms klassiska tivoli med berg- och dalbanor, fritt fall och karuseller för alla nivåer. Lång dag men hemma samma kväll.",
       cost_entrance: 545, cost_extra: 0, cost_accommodation: 0 },
+    { key: "gronalund-leksand", name: "Gröna Lund + Leksand Sommarland", location: "Stockholm & Leksand", subtitle: "Två dagsturer – hemma och sova båda kvällarna", image_url: "/img/mallar/gronalund.jpg", overnight: false, days: 2,
+      tags: ["Tivoli", "Vattenpark", "2 dagsturer"], website_url: "https://www.gronalund.com",
+      description: "Två roliga dagar utan att sova borta!\n\nDag 1: Gröna Lund i Stockholm – berg- och dalbanor, fritt fall och karuseller.\nDag 2: Leksand Sommarland – vattenrutschkanor, bassänger och åkattraktioner (skolpaket med lunch).\n\nAlla åker hem och sover hemma mellan dagarna.",
+      cost_entrance: 1040, cost_extra: 0, cost_accommodation: 0 },
     // ---------- Med övernattning ----------
     { key: "skara", name: "Skara Sommarland", location: "Skara", subtitle: "Vattenpark & nöjespark", image_url: "/img/mallar/skara.jpg",
       tags: ["Vattenrutschkanor", "Nöjespark"], website_url: "https://www.skarasommarland.se",
