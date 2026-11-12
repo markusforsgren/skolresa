@@ -75,6 +75,13 @@ create table if not exists public.km_destinations (
   created_at      timestamptz not null default now()
 );
 create index if not exists km_destinations_class_idx on public.km_destinations(class_id);
+-- Antal dagsturer i samma alternativ (t.ex. Gröna Lund en dag + Leksand en dag)
+alter table public.km_destinations add column if not exists days int not null default 1;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'km_destinations_days_chk') then
+    alter table public.km_destinations add constraint km_destinations_days_chk check (days between 1 and 10);
+  end if;
+end $$;
 
 create table if not exists public.km_votes (
   id              uuid primary key default gen_random_uuid(),
@@ -203,7 +210,7 @@ begin
       select jsonb_agg(jsonb_build_object(
         'id', d.id, 'name', d.name, 'location', d.location, 'subtitle', d.subtitle,
         'description', d.description, 'image_url', d.image_url, 'video_url', d.video_url,
-        'website_url', d.website_url, 'tags', d.tags, 'overnight', d.overnight
+        'website_url', d.website_url, 'tags', d.tags, 'overnight', d.overnight, 'days', d.days
       ) || case when c.show_costs then jsonb_build_object(
         'cost_entrance', d.cost_entrance, 'cost_extra', d.cost_extra,
         'cost_accommodation', d.cost_accommodation, 'cost_transport', d.cost_transport,
