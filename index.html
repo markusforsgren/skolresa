@@ -12,7 +12,38 @@
 </head>
 <body>
 
-<div class="hero">
+<div class="hero hero-coaster">
+  <svg id="coaster" class="coaster-svg" viewBox="0 0 1200 260" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <g id="coaster-supports" stroke="rgba(255,255,255,.16)" stroke-width="2"></g>
+    <path id="coaster-ties" d="M -80 205 C 20 205 80 200 140 170 C 210 132 235 52 300 52 C 365 52 385 205 455 207 C 520 209 565 205 600 192
+         C 650 176 700 155 705 122 C 710 88 685 70 660 72 C 633 74 614 96 618 124 C 623 162 668 203 745 206
+         C 820 209 850 120 920 110 C 985 101 1005 192 1065 196 C 1130 200 1200 150 1290 150" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="11" stroke-dasharray="2.5 8"/>
+    <path id="coaster-track" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="3.5" stroke-linecap="round"
+      d="M -80 205 C 20 205 80 200 140 170 C 210 132 235 52 300 52 C 365 52 385 205 455 207 C 520 209 565 205 600 192
+         C 650 176 700 155 705 122 C 710 88 685 70 660 72 C 633 74 614 96 618 124 C 623 162 668 203 745 206
+         C 820 209 850 120 920 110 C 985 101 1005 192 1065 196 C 1130 200 1200 150 1290 150"/>
+    <g class="coaster-car"><g transform="translate(0,0)">
+      <circle cx="-8" cy="-21" r="4.2" fill="#FDE68A"/><circle cx="7" cy="-21" r="4.2" fill="#FBCFE8"/>
+      <path d="M-12 -18 l-5 -9 M-4 -18 l3 -9 M3 -18 l-4 -9 M11 -18 l5 -9" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <path d="M-18 -4 L-18 -14 Q-18 -18 -14 -18 L14 -18 Q19 -18 19 -12 L19 -4 Z" fill="#FCD34D"/>
+      <rect x="-18" y="-9" width="37" height="3" fill="rgba(255,255,255,.55)"/>
+      <circle cx="-10" cy="-2" r="3" fill="#1E1B4B"/><circle cx="11" cy="-2" r="3" fill="#1E1B4B"/>
+    </g></g>
+    <g class="coaster-car"><g transform="translate(0,0)">
+      <circle cx="-8" cy="-21" r="4.2" fill="#FDE68A"/><circle cx="7" cy="-21" r="4.2" fill="#FBCFE8"/>
+      <path d="M-12 -18 l-5 -9 M-4 -18 l3 -9 M3 -18 l-4 -9 M11 -18 l5 -9" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <path d="M-18 -4 L-18 -14 Q-18 -18 -14 -18 L14 -18 Q19 -18 19 -12 L19 -4 Z" fill="#F472B6"/>
+      <rect x="-18" y="-9" width="37" height="3" fill="rgba(255,255,255,.55)"/>
+      <circle cx="-10" cy="-2" r="3" fill="#1E1B4B"/><circle cx="11" cy="-2" r="3" fill="#1E1B4B"/>
+    </g></g>
+    <g class="coaster-car"><g transform="translate(0,0)">
+      <circle cx="-8" cy="-21" r="4.2" fill="#FDE68A"/><circle cx="7" cy="-21" r="4.2" fill="#FBCFE8"/>
+      <path d="M-12 -18 l-5 -9 M-4 -18 l3 -9 M3 -18 l-4 -9 M11 -18 l5 -9" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <path d="M-18 -4 L-18 -14 Q-18 -18 -14 -18 L14 -18 Q19 -18 19 -12 L19 -4 Z" fill="#67E8F9"/>
+      <rect x="-18" y="-9" width="37" height="3" fill="rgba(255,255,255,.55)"/>
+      <circle cx="-10" cy="-2" r="3" fill="#1E1B4B"/><circle cx="11" cy="-2" r="3" fill="#1E1B4B"/>
+    </g></g>
+  </svg>
   <div class="topbar">
     <a class="brand" href="/">🎯 Klassmålet</a>
     <a class="link-light" href="/admin.html">Logga in som vuxen →</a>
@@ -55,6 +86,9 @@
   </div>
 </div>
 
+<script src="/vendor/three.min.js" defer></script>
+<script src="/js/coaster3d.js" defer></script>
+<script src="/js/coaster.js" defer></script>
 <footer class="site">Klassmålet · klassmålet.se</footer>
 
 <script>
